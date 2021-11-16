@@ -5,9 +5,9 @@ import java.util.*;
 public class ServidorWeb1
 {
 	public static final int PUERTO=8000;
-	ServerSocket ss;
+	private static ServerSocket ss;
 		
-		class Manejador extends Thread
+		static class Manejador extends Thread
 		{
 			protected Socket socket;
 			protected PrintWriter pw;
@@ -206,10 +206,12 @@ public class ServidorWeb1
 				
 			}
 		}
-		public ServidorWeb1() throws Exception
-		{
+		
+		
+		
+		public static void main(String[] args) throws Exception{
 			System.out.println("Iniciando Servidor.......");
-			this.ss=new ServerSocket(PUERTO);
+			ss = new ServerSocket(PUERTO);
 			System.out.println("Servidor iniciado:---OK");
 			System.out.println("Esperando por Cliente....");
 			for(;;)
@@ -217,12 +219,6 @@ public class ServidorWeb1
 				Socket accept=ss.accept();
 				new Manejador(accept).start();
 			}
-		}
-		
-		
-		
-		public static void main(String[] args) throws Exception{
-			ServidorWeb1 sWEB=new ServidorWeb1();
 		}
 	
 }
