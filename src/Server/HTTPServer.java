@@ -57,14 +57,51 @@ public class HTTPServer extends Thread{
             StringTokenizer st1= new StringTokenizer(peticion,"\n");
             String line = st1.nextToken();
             if(line.indexOf("?") == -1) {
-                // TODO: METHOD POST
-                getArch(line);
-                if(FileName.compareTo("")==0)
-                    SendA("index.htm",dos);
-                else
-                    SendA(FileName,dos);
-                //System.out.println(FileName);
-            } else if(line.toUpperCase().startsWith("GET")) {
+                if(line.toUpperCase().startsWith("POST")){
+                    String lastToken = peticion.substring(peticion.lastIndexOf("\n"));
+                    System.out.println(lastToken);
+                    StringBuffer respuesta = new StringBuffer();
+                    respuesta.append("HTTP/1.0 200 Okay \n");
+                    String fecha= "Date: " + new Date()+" \n";
+                    respuesta.append(fecha);
+                    String tipo_mime = "Content-Type: text/html \n\n";
+                    respuesta.append(tipo_mime);
+                    respuesta.append("<html><head><title>SERVIDOR WEB</title></head>\n");
+                    respuesta.append("<body bgcolor=\"#AACCFF\"><center><h1><br>Parametros Obtenidos..</br></h1><h3><b>\n");
+                    respuesta.append(lastToken);
+                    respuesta.append("</b></h3>\n</center></body></html>\n\n");
+                    System.out.println("Respuesta: "+respuesta);
+                    dos.write(respuesta.toString().getBytes());
+                    dos.flush();
+                    dos.close();
+                    socket.close();
+                } else if (line.toUpperCase().startsWith("PUT")) {
+                    //TODO: PUT HTTP method implementation
+                    getArch(line);
+                    System.out.println(FileName); //File path to process
+                    //Not Implemented response ---> DLETE AFTER IMPLEMENTATION
+                    dos.write("HTTP/1.0 501 Not Implemented\r\n".getBytes());
+                    dos.flush();
+                    dos.close();
+                    socket.close();
+                } else if (line.toUpperCase().startsWith("DELETE")) {
+                    //TODO: DELTE HTTP method implementation
+                    getArch(line);
+                    System.out.println(FileName); //File path to process
+                    //Not Implemented response ---> DLETE AFTER IMPLEMENTATION
+                    dos.write("HTTP/1.0 501 Not Implemented\r\n".getBytes());
+                    dos.flush();
+                    dos.close();
+                    socket.close();
+                }else { //HEAD OR GET WITHPUT PARAMS
+                    getArch(line);
+                    if(FileName.compareTo("") == 0)
+                        SendA("index.htm",dos);
+                    else
+                        SendA(FileName,dos);
+                    System.out.println(FileName);
+                }
+            } else if(line.toUpperCase().startsWith("GET")) { //GET WITH PARAMS
                 StringTokenizer tokens=new StringTokenizer(line,"?");
                 String req_a=tokens.nextToken();
                 String req=tokens.nextToken();
@@ -81,8 +118,7 @@ public class HTTPServer extends Thread{
                 respuesta.append("<html><head><title>SERVIDOR WEB</title></head>\n");
                 respuesta.append("<body bgcolor=\"#AACCFF\"><center><h1><br>Parametros Obtenidos..</br></h1><h3><b>\n");
                 respuesta.append(parametros);
-                respuesta.append("</b></h3>\n");
-                respuesta.append("</center></body></html>\n\n");
+                respuesta.append("</b></h3>\n</center></body></html>\n\n");
                 System.out.println("Respuesta: "+respuesta);
                 dos.write(respuesta.toString().getBytes());
                 dos.flush();
@@ -111,11 +147,9 @@ public class HTTPServer extends Thread{
 
     public void getArch(String line) {
         int i, f;
-        if(line.toUpperCase().startsWith("GET")) {
-                i=line.indexOf("/");
-                f=line.indexOf(" ",i);
-                FileName=line.substring(i+1,f);
-        }
+        i=line.indexOf("/");
+        f=line.indexOf(" ",i);
+        FileName=line.substring(i+1,f);
     }
 
     public void SendA(String fileName,Socket sc,DataOutputStream dos) {
