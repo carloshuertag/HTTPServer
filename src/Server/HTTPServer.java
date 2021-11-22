@@ -6,6 +6,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
@@ -39,6 +40,16 @@ public class HTTPServer extends Thread{
             int t = dis.read(b);
             String request = new String(b,0,t);
             System.out.println("t: "+t);
+            if(request == null) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("<html><head><title>Servidor WEB\n");
+                sb.append("</title><body bgcolor=\"#AACCFF\"<br>Linea Vacia</br>\n");
+                sb.append("</body></html>\n");
+                dos.write(sb.toString().getBytes());
+                dos.flush();
+                socket.close();
+                return;
+            }
             System.out.println("\nClient connected from: "+socket.getInetAddress());
             System.out.println("At port: "+socket.getPort());
             System.out.println("Request:\n"+request+"\r\n\r\n");
@@ -52,12 +63,9 @@ public class HTTPServer extends Thread{
                 } else if (line.toUpperCase().startsWith("PUT")) {
                     //TODO: PUT HTTP method implementation
                     getFileName(line);
-                    System.out.println("Filename: "+fileName); //File path to process
-                    String lastToken = request.substring(request.lastIndexOf("\n"));
-                    System.out.println(lastToken); // file content?
-                    //Not Implemented response ---> DELETE AFTER IMPLEMENTATION
-                    System.out.println("PUT");
-                    sendStatus(501, "Not Implemented");
+                    while(!line.contains("Content-Type"))  line = st1.nextToken();
+                    st1.nextToken();
+                    put(st1);
                 } else if (line.toUpperCase().startsWith("DELETE")) {
                     getFileName(line);
                     delete();
@@ -116,6 +124,33 @@ public class HTTPServer extends Thread{
             }
         else
             htmlResponse(404, "Not found", "404 Not Found");
+    }
+    
+    private void put(StringTokenizer content) throws IOException{
+        System.out.println("PUT");
+        File file = new File(fileName);
+        File nfile = new File(fileName);
+        if(file.exists()){
+            if(Files.isWritable(Paths.get(fileName))){
+                file.delete();
+                nfile.createNewFile();
+                FileWriter myWriter = new FileWriter(fileName);
+                while(content.hasMoreTokens()) myWriter.write(content.nextToken());
+                myWriter.close();
+                System.out.println(fileName + " updated");
+                htmlResponse(200, "OK", "File updated");
+            } else {
+                System.out.println(fileName + " not updated");
+                htmlResponse(200, "OK", "You don't have permission to modify this file.");
+            }
+        } else {
+            file.createNewFile();
+            System.out.println(fileName + " created");
+            htmlResponse(201, "CREATED", "File created");
+            FileWriter myWriter = new FileWriter(fileName);
+            while(content.hasMoreTokens()) myWriter.write(content.nextToken());
+            myWriter.close();
+        }
     }
     
     private void htmlResponse(int code, String status, String msg) throws IOException{
