@@ -55,9 +55,8 @@ public class HTTPServer extends Thread{
                     System.out.println("Filename: "+fileName); //File path to process
                     String lastToken = request.substring(request.lastIndexOf("\n"));
                     System.out.println(lastToken); // file content?
-                    //Not Implemented response ---> DELETE AFTER IMPLEMENTATION
+                    put();
                     System.out.println("PUT");
-                    sendStatus(501, "Not Implemented");
                 } else if (line.toUpperCase().startsWith("DELETE")) {
                     getFileName(line);
                     delete();
@@ -116,6 +115,23 @@ public class HTTPServer extends Thread{
             }
         else
             htmlResponse(404, "Not found", "404 Not Found");
+    }
+    
+    private void put() throws IOException{
+        System.out.println("PUT");
+        File file = new File(fileName);
+        File nfile = new File(fileName);
+        if(file.exists())
+            if(Files.isWritable(Paths.get(fileName))){
+                file.delete();
+                nfile.createNewFile();
+                System.out.println(fileName + " updated");
+                htmlResponse(200, "OK", "File updated");
+            } else {
+                file.createNewFile();
+                System.out.println(fileName + " created");
+                htmlResponse(201, "CREATED", "File created");
+            }
     }
     
     private void htmlResponse(int code, String status, String msg) throws IOException{
