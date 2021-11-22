@@ -61,9 +61,8 @@ public class HTTPServer extends Thread{
                     System.out.println(lastToken);
                     paramsResponse(lastToken);
                 } else if (line.toUpperCase().startsWith("PUT")) {
-                    //TODO: PUT HTTP method implementation
                     getFileName(line);
-                    while(!line.contains("Content-Type"))  line = st1.nextToken();
+                    while(!line.contains("Content-Type")) line = st1.nextToken();
                     st1.nextToken();
                     put(st1);
                 } else if (line.toUpperCase().startsWith("DELETE")) {
@@ -183,33 +182,29 @@ public class HTTPServer extends Thread{
         socket.close();
     }
 
-    private void sendFile(String filePath, DataOutputStream dos1, boolean get) {
-        try {
-            int x = 0;
-            DataInputStream dis2 = new DataInputStream(new FileInputStream(filePath));
-            byte[] buf=new byte[1024];
-            File ff = new File(filePath);			
-            long tam_archivo=ff.length(),cont=0;
-            StringBuffer sb = new StringBuffer();
-            sb.append("HTTP/1.0 200 ok\n").append("Server: HTTPServer/1.0 \n");
-            sb.append("Date: ").append(new Date()).append(" \n");
-            sb.append("Content-Type: text/html \n");
-            sb.append("Content-Length: ").append(tam_archivo).append(" \n\n");
-            System.out.println(sb);
-            dos1.write(sb.toString().getBytes());
-            dos1.flush();
-            if(get){
-                while(cont<tam_archivo) {
-                    x = dis2.read(buf);
-                    dos1.write(buf,0,x);
-                    cont += x;
-                    dos1.flush();
-                }
+    private void sendFile(String filePath, DataOutputStream dos1, boolean get)
+        throws IOException{
+        int x = 0;
+        DataInputStream dis2 = new DataInputStream(new FileInputStream(filePath));
+        byte[] buf=new byte[1024];
+        File ff = new File(filePath);			
+        long tam_archivo=ff.length(),cont=0;
+        StringBuffer sb = new StringBuffer();
+        sb.append("HTTP/1.0 200 ok\n").append("Server: HTTPServer/1.0 \n");
+        sb.append("Date: ").append(new Date()).append(" \n");
+        sb.append("Content-Type: text/html \n");
+        sb.append("Content-Length: ").append(tam_archivo).append(" \n\n");
+        System.out.println(sb);
+        dos1.write(sb.toString().getBytes());
+        dos1.flush();
+        if(get)
+            while(cont<tam_archivo) {
+                x = dis2.read(buf);
+                dos1.write(buf,0,x);
+                cont += x;
+                dos1.flush();
             }
-            dis2.close();
-            dos1.close();
-        } catch(Exception e) {
-            System.out.println(e.getMessage());
-        }
+        dis2.close();
+        dos1.close();
     }
 }
