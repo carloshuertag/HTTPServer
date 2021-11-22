@@ -9,6 +9,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Date;
 import java.util.StringTokenizer;
 
@@ -37,16 +39,6 @@ public class HTTPServer extends Thread{
             int t = dis.read(b);
             String request = new String(b,0,t);
             System.out.println("t: "+t);
-            if(request == null) {
-                    StringBuffer sb = new StringBuffer();
-                    sb.append("<html><head><title>Servidor WEB\n");
-                    sb.append("</title><body bgcolor=\"#AACCFF\"<br>Linea Vacia</br>\n");
-                    sb.append("</body></html>\n");
-                    dos.write(sb.toString().getBytes());
-                    dos.flush();
-                    socket.close();
-                    return;
-            }
             System.out.println("\nClient connected from: "+socket.getInetAddress());
             System.out.println("At port: "+socket.getPort());
             System.out.println("Request:\n"+request+"\r\n\r\n");
@@ -61,22 +53,14 @@ public class HTTPServer extends Thread{
                     //TODO: PUT HTTP method implementation
                     getFileName(line);
                     System.out.println("Filename: "+fileName); //File path to process
-                    //Not Implemented response ---> DLETE AFTER IMPLEMENTATION
+                    String lastToken = request.substring(request.lastIndexOf("\n"));
+                    System.out.println(lastToken); // file content?
+                    //Not Implemented response ---> DELETE AFTER IMPLEMENTATION
                     System.out.println("PUT");
-                    dos.write("HTTP/1.0 501 Not Implemented\r\n".getBytes());
-                    dos.flush();
-                    dos.close();
-                    socket.close();
+                    sendStatus(501, "Not Implemented");
                 } else if (line.toUpperCase().startsWith("DELETE")) {
-                    //TODO: DELTE HTTP method implementation
                     getFileName(line);
-                    System.out.println("Filename: "+fileName); //File path to process
-                    //Not Implemented response ---> DLETE AFTER IMPLEMENTATION
-                    System.out.println("DELETE");
-                    dos.write("HTTP/1.0 501 Not Implemented\r\n".getBytes());
-                    dos.flush();
-                    dos.close();
-                    socket.close();
+                    delete();
                 } else { //HEAD OR GET WITHPUT PARAMS
                     getFileName(line);
                     boolean get = (line.toUpperCase().startsWith("GET"));
@@ -93,18 +77,14 @@ public class HTTPServer extends Thread{
                 System.out.println("Token2: "+req);
                 String params = req.substring(0, req.indexOf(" "))+"\n";
                 paramsResponse(params);
-            } else {
-                dos.write("HTTP/1.0 501 Not Implemented\r\n".getBytes());
-                dos.flush();
-                dos.close();
-                socket.close();
-            }
+            } else
+                sendStatus(501, "Not Implemented");
         } catch(IOException e) {
             e.printStackTrace();
         }
     }
     
-    public void paramsResponse(String params) throws IOException{
+    private void paramsResponse(String params) throws IOException{
         System.out.println("Params: "+params);
         StringBuffer response= new StringBuffer();
         response.append("HTTP/1.0 200 Okay \n");
@@ -121,15 +101,54 @@ public class HTTPServer extends Thread{
         dos.close();
         socket.close();
     }
+    
+    private void delete() throws IOException{
+        System.out.println("DELETE");
+        File file = new File(fileName);
+        if(file.exists())
+            if(Files.isWritable(Paths.get(fileName))){
+                file.delete();
+                System.out.println(fileName + " deleted");
+                htmlResponse(200, "OK", "File deleted");
+            } else {
+                System.out.println(fileName + " not deleted");
+                htmlResponse(200, "OK", "File not deleted");
+            }
+        else
+            htmlResponse(404, "Not found", "404 Not Found");
+    }
+    
+    private void htmlResponse(int code, String status, String msg) throws IOException{
+        StringBuilder sb = new StringBuilder();
+        sb.append("HTTP/1.0 "+code+" "+status+"\r\n");
+        sb.append("Date: ").append(new Date()).append(" \n");
+        String mimeType = "Content-Type: text/html \n\n";
+        sb.append(mimeType);
+        sb.append("<html><head><title>Servidor WEB\n");
+        sb.append("</title><body bgcolor=\"#AACCFF\"<br>"+msg+"</br>\n");
+        sb.append("</body></html>\n");
+        dos.write(sb.toString().getBytes());
+        dos.flush();
+        socket.close();
+    }
 
-    public void getFileName(String line) {
+    private void getFileName(String line) {
         int i, f;
         i=line.indexOf("/");
         f=line.indexOf(" ",i);
         fileName=line.substring(i+1,f);
     }
+    
+    private void sendStatus(int code, String msg) throws IOException{
+        String response = "HTTP/1.0 "+code+" "+msg+"\r\n";
+        System.out.println(response);
+        dos.write(response.getBytes());
+        dos.flush();
+        dos.close();
+        socket.close();
+    }
 
-    public void sendFile(String filePath, DataOutputStream dos1, boolean get) {
+    private void sendFile(String filePath, DataOutputStream dos1, boolean get) {
         try {
             int x = 0;
             DataInputStream dis2 = new DataInputStream(new FileInputStream(filePath));
