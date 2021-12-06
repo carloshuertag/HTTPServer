@@ -190,10 +190,10 @@ public class HTTPServer extends Thread{
         File ff = new File(filePath);			
         long tam_archivo=ff.length(),cont=0;
         StringBuffer sb = new StringBuffer();
-        sb.append("HTTP/1.0 200 ok\n").append("Server: HTTPServer/1.0 \n");
-        sb.append("Date: ").append(new Date()).append(" \n");
-        sb.append("Content-Type: text/html \n");
-        sb.append("Content-Length: ").append(tam_archivo).append(" \n\n");
+        sb.append("HTTP/1.0 200 ok\r\n").append("Server: HTTPServer/1.0 \r\n");
+        sb.append("Date: ").append(new Date()).append(" \r\n");
+        sb.append("Content-Type: text/html \r\n");
+        sb.append("Content-Length: ").append(tam_archivo).append(" \r\n\r\n");
         System.out.println(sb);
         dos1.write(sb.toString().getBytes());
         dos1.flush();
